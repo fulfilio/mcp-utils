@@ -18,6 +18,7 @@ A Python utility package for building Model Context Protocol (MCP) servers.
   - [Usage](#usage)
     - [Basic MCP Server](#basic-mcp-server)
     - [Flask with Redis Example](#flask-with-redis-example)
+    - [SQLAlchemy Transaction Handling Example](#sqlalchemy-transaction-handling-example)
   - [Connecting with MCP Clients](#connecting-with-mcp-clients)
     - [Claude Desktop](#claude-desktop)
       - [Installing via Smithery](#installing-via-smithery)
@@ -125,6 +126,46 @@ def message(session_id):
     mcp.handle_message(session_id, request.get_json())
     return "", 202
 
+
+if __name__ == "__main__":
+    app.run(debug=True)
+```
+
+### SQLAlchemy Transaction Handling Example
+
+For production use, you can integrate the MCP server with Flask, Redis, and SQLAlchemy for better message handling and database transaction management:
+
+```python
+from flask import Flask, request
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+import redis
+from mcp_utils.queue import RedisResponseQueue
+
+# Setup Redis client
+redis_client = redis.Redis(host="localhost", port=6379, db=0)
+
+# Create engine for PostgreSQL database
+engine = create_engine("postgresql://user:pass@localhost/dbname")
+
+# Create Flask app and MCP server with Redis queue
+app = Flask(__name__)
+mcp = MCPServer(
+    "example",
+    "1.0",
+    response_queue=RedisResponseQueue(redis_client)
+)
+
+@app.route("/message/<session_id>", methods=["POST"])
+def message(session_id):
+    with Session(engine) as session:
+        try:
+            mcp.handle_message(session_id, request.get_json())
+            session.commit()
+            return "", 202
+        except Exception as e:
+            session.rollback()
+            raise
 
 if __name__ == "__main__":
     app.run(debug=True)
