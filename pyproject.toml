@@ -26,14 +26,15 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/fulfil-io/mcp-utils"
-Repository = "https://github.com/fulfil-io/mcp-utils.git"
+Homepage = "https://github.com/fulfilio/mcp-utils"
+Repository = "https://github.com/fulfilio/mcp-utils.git"
 
 [project.optional-dependencies]
 dev = [
     "pre-commit>=3.6.0",
     "ruff>=0.3.0",
     "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -64,3 +65,8 @@ line-ending = "auto"
 
 [tool.ruff.lint.isort]
 known-first-party = ["mcp_utils"]
+
+[tool.pytest.ini_options]
+addopts = "--cov=mcp_utils --cov-report=term-missing"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
