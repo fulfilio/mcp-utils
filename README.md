@@ -2,6 +2,9 @@
 
 A Python utility package for building Model Context Protocol (MCP) servers.
 
+![Tests](https://github.com/fulfilio/mcp-utils/actions/workflows/test.yml/badge.svg)
+
+
 ## Table of Contents
 
 - [mcp-utils](#mcp-utils)
