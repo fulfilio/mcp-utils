@@ -106,7 +106,7 @@ if __name__ == "__main__":
     app.run(debug=True)
 ```
 
-For a more comprehensive example including logging setup and session management, check out the [example Flask application](examples/flask_app.py) in the repository.
+For a more comprehensive example including logging setup and session management, check out the [example Flask application](https://github.com/fulfilio/mcp-utils/blob/main/examples/flask_app.py) in the repository.
 
 ## Contributing
 
