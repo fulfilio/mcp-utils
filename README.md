@@ -26,6 +26,9 @@ A Python utility package for building Model Context Protocol (MCP) servers.
   - [Contributing](#contributing)
   - [Related Projects](#related-projects)
   - [License](#license)
+  - [Testing with MCP Inspector](#testing-with-mcp-inspector)
+    - [Installation](#installation-1)
+    - [Usage](#usage-1)
 
 ## Overview
 
@@ -226,3 +229,39 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ## License
 
 MIT License
+
+## Testing with MCP Inspector
+
+The [MCP Inspector](https://github.com/modelcontextprotocol/inspector) is a useful tool for testing and debugging MCP servers. It provides a web interface to inspect and test MCP server endpoints.
+
+### Installation
+
+Install MCP Inspector using npm:
+
+```bash
+npm install -g @modelcontextprotocol/inspector
+```
+
+### Usage
+
+1. Start your MCP server (e.g., the Flask example above)
+2. Run MCP Inspector:
+
+```bash
+git clone git@github.com:modelcontextprotocol/inspector.git
+cd inspector
+npm run build
+npm start
+```
+
+3. Open your browser and navigate to `http://127.0.0.1:6274/`
+4. Enter your MCP server URL (e.g., `http://localhost:9000/sse`)
+5. Use the inspector to:
+   - Change transport type to SSE
+   - Test server connections
+   - Monitor SSE events
+   - Send test messages
+   - Debug responses
+
+This tool is particularly useful during development to ensure your MCP server implementation
+is working correctly and complies with the protocol specification.
