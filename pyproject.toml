@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mcp-utils"
-version = "0.1.0"
+version = "0.1.1"
 description = "Synchronous utilities for Model Context Protocol (MCP) integration"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -73,7 +73,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 
 [tool.bumpversion]
-current_version = "0.1.0"
+current_version = "0.1.1"
 commit = true
 tag = true
 allow_dirty = false
