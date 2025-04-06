@@ -187,7 +187,7 @@ Configuration example for Claude Desktop:
 ```json
 {
   "mcpServers": {
-    "fulfil": {
+    "weather": {
       "command": "/Users/yourname/.local/bin/mcp-proxy",
       "args": ["http://127.0.0.1:9000/sse"]
     }
