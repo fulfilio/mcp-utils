@@ -90,8 +90,8 @@ def get_weather_prompt(city: str) -> GetPromptResult:
     )
 
 @mcp.tool()
-def get_weather(city: str) -> CallToolResult:
-    return CallToolResult(content=[TextContent(text="sunny")], is_error=False)
+def get_weather(city: str) -> str:
+    return "sunny"
 ```
 
 ### Flask with Redis Example
