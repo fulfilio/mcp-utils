@@ -200,7 +200,7 @@ class MCPServer:
         """
         return str(uuid.uuid4())
 
-    def sse_stream(self, session_id: str, messages_endpoint: str):
+    def sse_stream(self, session_id: str, messages_endpoint: str | None = None):
         """
         Create a Server-Sent Events (SSE) stream for a session
 
@@ -211,10 +211,11 @@ class MCPServer:
         Returns:
             Iterator yielding SSE formatted strings
         """
-        # The first message is the endpoint itself
-        endpoint_response = f"event: endpoint\ndata: {messages_endpoint}\n\n"
-        logger.debug(f"Sending endpoint: {endpoint_response}")
-        yield endpoint_response
+        if messages_endpoint is not None:
+            # The first message is the endpoint itself
+            endpoint_response = f"event: endpoint\ndata: {messages_endpoint}\n\n"
+            logger.debug(f"Sending endpoint: {endpoint_response}")
+            yield endpoint_response
 
         # Now loop and block forever and keep yielding responses
         try:
