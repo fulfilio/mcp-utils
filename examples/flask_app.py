@@ -16,12 +16,10 @@ In addition to the requirements for the simple example, this example also:
 import logging
 import sys
 
-import redis
-from flask import Flask, Response, jsonify, request, url_for
+from flask import Flask, jsonify, request
 from gunicorn.app.base import BaseApplication
 
 from mcp_utils.core import MCPServer
-from mcp_utils.queue import RedisResponseQueue
 from mcp_utils.schema import (
     CallToolResult,
     CompletionValues,
@@ -29,7 +27,6 @@ from mcp_utils.schema import (
     Message,
     TextContent,
 )
-
 
 app = Flask(__name__)
 mcp = MCPServer("weather", "1.0")
