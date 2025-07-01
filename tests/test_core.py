@@ -72,7 +72,7 @@ def test_server_initialization(server: MCPServer) -> None:
     # Test basic attributes
     assert server.name == "Test Server"
     assert server.version == "1.0.0"
-    assert server.protocol_version == "2024-11-05"
+    assert server.protocol_version == "2025-06-18"
 
     # Test capabilities
     capabilities = server.get_capabilities()
