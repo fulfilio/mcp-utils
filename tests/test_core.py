@@ -307,7 +307,7 @@ def test_message_handling(server: MCPServer) -> None:
             "clientInfo": {"name": "Test Client", "version": "1.0.0"},
         },
     }
-    server.handle_message(session_id, init_request)
+    server.handle_message(message=init_request, session_id=session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["jsonrpc"] == "2.0"
     assert response["id"] == "1"
@@ -326,7 +326,7 @@ def test_message_handling(server: MCPServer) -> None:
         "method": "tools/call",
         "params": {"name": "echo", "arguments": {"message": "hello"}},
     }
-    server.handle_message(session_id, tool_request)
+    server.handle_message(tool_request, session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["jsonrpc"] == "2.0"
     assert response["id"] == "2"
@@ -344,7 +344,7 @@ def test_message_handling(server: MCPServer) -> None:
         "method": "tools/call",
         "params": {"name": "echo_str", "arguments": {"message": "hello"}},
     }
-    server.handle_message(session_id, tool_request)
+    server.handle_message(tool_request, session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["jsonrpc"] == "2.0"
     assert response["id"] == "2"
@@ -362,7 +362,7 @@ def test_message_handling(server: MCPServer) -> None:
         "method": "tools/call",
         "params": {"name": "echo_dict", "arguments": {"message": "hello"}},
     }
-    server.handle_message(session_id, tool_request)
+    server.handle_message(tool_request, session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["jsonrpc"] == "2.0"
     assert response["id"] == "3"
@@ -380,7 +380,7 @@ def test_message_handling(server: MCPServer) -> None:
         "method": "tools/call",
         "params": {"name": "echo_result", "arguments": {"message": "hello"}},
     }
-    server.handle_message(session_id, tool_request)
+    server.handle_message(tool_request, session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["jsonrpc"] == "2.0"
     assert response["id"] == "4"
@@ -393,7 +393,7 @@ def test_error_handling(server: MCPServer) -> None:
 
     # Test invalid message format
     invalid_message = {"not": "valid"}
-    server.handle_message(session_id, invalid_message)
+    server.handle_message(invalid_message, session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["error"]["code"] == -32600  # Invalid Request
 
@@ -404,7 +404,7 @@ def test_error_handling(server: MCPServer) -> None:
         "method": "unknown",
         "params": {},
     }
-    server.handle_message(session_id, unknown_method)
+    server.handle_message(unknown_method, session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["error"]["code"] == -32601  # Method not found
 
@@ -415,7 +415,7 @@ def test_error_handling(server: MCPServer) -> None:
         "method": "tools/call",
         "params": {"name": "nonexistent", "arguments": {}},
     }
-    server.handle_message(session_id, invalid_tool)
+    server.handle_message(invalid_tool, session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["error"]["code"] == -32601  # Method not found
 
@@ -431,7 +431,7 @@ def test_error_handling(server: MCPServer) -> None:
         "method": "tools/call",
         "params": {"name": "test_tool", "arguments": {"wrong_arg": "value"}},
     }
-    server.handle_message(session_id, invalid_args)
+    server.handle_message(invalid_args, session_id)
     response = json.loads(server.wait_for_queued_response(session_id))
     assert response["error"]["code"] == -32602  # Invalid params
 

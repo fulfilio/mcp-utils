@@ -17,7 +17,7 @@ import logging
 import sys
 
 import redis
-from flask import Flask, Response, request, url_for
+from flask import Flask, Response, jsonify, request, url_for
 from gunicorn.app.base import BaseApplication
 
 from mcp_utils.core import MCPServer
@@ -30,14 +30,9 @@ from mcp_utils.schema import (
     TextContent,
 )
 
-redis_client = redis.Redis(
-    host="localhost",
-    port=6379,
-    db=0,
-)
 
 app = Flask(__name__)
-mcp = MCPServer("weather", "1.0", response_queue=RedisResponseQueue(redis_client))
+mcp = MCPServer("weather", "1.0")
 
 logger = logging.getLogger("mcp_utils")
 logger.setLevel(logging.DEBUG)
@@ -85,27 +80,10 @@ def get_cities(city_name: str) -> CompletionValues:
     return [city for city in all_cities if city.lower().startswith(city_name.lower())]
 
 
-@app.route("/sse")
-def sse():
-    session_id = mcp.generate_session_id()
-    messages_endpoint = url_for("message", session_id=session_id)
-    logger.info(f"SSE endpoint: {messages_endpoint}")
-    logger.info(f"Session ID: {session_id}")
-
-    return Response(
-        mcp.sse_stream(session_id, messages_endpoint), mimetype="text/event-stream"
-    )
-
-
-@app.route("/message", methods=["POST"])
-def message():
-    """
-    Messages from the client are received as a POST
-    request with a JSON body.
-    """
-    logger.debug(f"Received message: {request.get_json()}")
-    mcp.handle_message(request.args["session_id"], request.get_json())
-    return "", 202
+@app.route("/mcp", methods=["POST"])
+def mcp_route():
+    response = mcp.handle_message(request.get_json())
+    return jsonify(response.model_dump(exclude_none=True))
 
 
 class FlaskApplication(BaseApplication):

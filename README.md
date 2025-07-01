@@ -17,9 +17,11 @@ A Python utility package for building Model Context Protocol (MCP) servers.
     - [Optional Dependencies](#optional-dependencies)
   - [Usage](#usage)
     - [Basic MCP Server](#basic-mcp-server)
-    - [Flask with Redis Example](#flask-with-redis-example)
+    - [Flask Example](#flask-example)
     - [SQLAlchemy Transaction Handling Example](#sqlalchemy-transaction-handling-example)
+    - [Running with Gunicorn](#running-with-gunicorn)
   - [Connecting with MCP Clients](#connecting-with-mcp-clients)
+    - [Cursor](#cursor)
     - [Claude Desktop](#claude-desktop)
       - [Installing via Smithery](#installing-via-smithery)
       - [Installing via PyPI](#installing-via-pypi)
@@ -94,40 +96,27 @@ def get_weather(city: str) -> str:
     return "sunny"
 ```
 
-### Flask with Redis Example
+### Flask Example
 
-For production use, you can integrate the MCP server with Flask and Redis for better message handling:
+For production use, you can use a simple Flask app with the mcp server and
+support [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#streamable-http)
+from version 2025-06-18.
+
 
 ```python
 from flask import Flask, Response, url_for, request
-import redis
-from mcp_utils.queue import RedisResponseQueue
-
-# Setup Redis client
-redis_client = redis.Redis(host="localhost", port=6379, db=0)
 
 # Create Flask app and MCP server with Redis queue
 app = Flask(__name__)
 mcp = MCPServer(
     "example",
     "1.0",
-    response_queue=RedisResponseQueue(redis_client)
 )
 
-@app.route("/sse")
-def sse():
-    session_id = mcp.generate_session_id()
-    messages_endpoint = url_for("message", session_id=session_id)
-    return Response(
-        mcp.sse_stream(session_id, messages_endpoint),
-        mimetype="text/event-stream"
-    )
-
-
-@app.route("/message/<session_id>", methods=["POST"])
-def message(session_id):
-    mcp.handle_message(session_id, request.get_json())
-    return "", 202
+@app.route("/mcp", methods=["POST"])
+def mcp_route():
+    response = mcp.handle_message(request.get_json())
+    return jsonify(response.model_dump(exclude_none=True))
 
 
 if __name__ == "__main__":
@@ -142,11 +131,6 @@ For production use, you can integrate the MCP server with Flask, Redis, and SQLA
 from flask import Flask, request
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
-import redis
-from mcp_utils.queue import RedisResponseQueue
-
-# Setup Redis client
-redis_client = redis.Redis(host="localhost", port=6379, db=0)
 
 # Create engine for PostgreSQL database
 engine = create_engine("postgresql://user:pass@localhost/dbname")
@@ -156,19 +140,20 @@ app = Flask(__name__)
 mcp = MCPServer(
     "example",
     "1.0",
-    response_queue=RedisResponseQueue(redis_client)
 )
 
-@app.route("/message/<session_id>", methods=["POST"])
-def message(session_id):
+@app.route("/mcp", methods=["POST"])
+def mcp_route():
     with Session(engine) as session:
         try:
-            mcp.handle_message(session_id, request.get_json())
+            response = mcp.handle_message(request.get_json())
             session.commit()
-            return "", 202
-        except Exception as e:
+        except:
             session.rollback()
             raise
+        else:
+            return jsonify(response.model_dump(exclude_none=True))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
@@ -176,11 +161,65 @@ if __name__ == "__main__":
 
 For a more comprehensive example including logging setup and session management, check out the [example Flask application](https://github.com/fulfilio/mcp-utils/blob/main/examples/flask_app.py) in the repository.
 
+### Running with Gunicorn
+
+Gunicorn is a better approach to running even locally. To run the app with gunicorn
+
+```python
+from gunicorn.app.base import BaseApplication
+
+class FlaskApplication(BaseApplication):
+    def __init__(self, app, options=None):
+        self.options = options or {}
+        self.application = app
+        super().__init__()
+
+    def load_config(self):
+        config = {
+            key: value
+            for key, value in self.options.items()
+            if key in self.cfg.settings
+        }
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        return self.application
+
+
+if __name__ == "__main__":
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(name)s: %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    options = {
+        "bind": "0.0.0.0:9000",
+        "workers": 1,
+        "worker_class": "gevent",
+        "loglevel": "debug",
+    }
+    FlaskApplication(app, options).run()
+```
+
 ## Connecting with MCP Clients
+
+### Cursor
+
+* Edit MCP settings and add to configuration
+
+```json
+{
+  "mcpServers": {
+    "server-name": {
+      "url": "http://localhost:9000/mcp"
+    }
+  }
+}
+```
 
 ### Claude Desktop
 
-Currently, only Claude Desktop (not claude.ai) can connect to MCP servers. As of this writing, Claude Desktop does not support MCP through SSE and only supports stdio. To connect Claude Desktop with an MCP server, you'll need to use [mcp-proxy](https://github.com/sparfenyuk/mcp-proxy).
+As of this writing, Claude Desktop does not support MCP through SSE and only supports stdio. To connect Claude Desktop with an MCP server, you'll need to use [mcp-proxy](https://github.com/sparfenyuk/mcp-proxy).
 
 Configuration example for Claude Desktop:
 

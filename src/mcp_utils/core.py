@@ -54,8 +54,8 @@ class MCPServer:
     # by the server.
     # The client is responsible to disconnect if the version is
     # not supported.
-    # https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/lifecycle/#version-negotiation
-    protocol_version: str = "2024-11-05"
+    # https://spec.modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle/#version-negotiation
+    protocol_version: str = "2025-06-18"
 
     # server capabilities can be:
     # - prompts
@@ -200,7 +200,7 @@ class MCPServer:
         """
         return str(uuid.uuid4())
 
-    def sse_stream(self, session_id: str, messages_endpoint: str | None = None):
+    def sse_stream(self, session_id: str, messages_endpoint: str):
         """
         Create a Server-Sent Events (SSE) stream for a session
 
@@ -211,11 +211,10 @@ class MCPServer:
         Returns:
             Iterator yielding SSE formatted strings
         """
-        if messages_endpoint is not None:
-            # The first message is the endpoint itself
-            endpoint_response = f"event: endpoint\ndata: {messages_endpoint}\n\n"
-            logger.debug(f"Sending endpoint: {endpoint_response}")
-            yield endpoint_response
+        # The first message is the endpoint itself
+        endpoint_response = f"event: endpoint\ndata: {messages_endpoint}\n\n"
+        logger.debug(f"Sending endpoint: {endpoint_response}")
+        yield endpoint_response
 
         # Now loop and block forever and keep yielding responses
         try:
@@ -484,16 +483,20 @@ class MCPServer:
                 ),
             )
 
-    def handle_message(self, session_id: str, message: dict) -> MCPResponse | None:
+    def handle_message(
+        self, message: dict, session_id: str | None = None
+    ) -> MCPResponse | None:
         """Handle incoming MCP messages."""
         logger.debug(f"Handling message: {message}")
-        response = self._handle_message(session_id, message)
+        response = self._handle_message(message, session_id)
         logger.debug(f"Response: {response}")
-        if response is not None:
+        if response is not None and session_id is not None:
             self.response_queue.push_response(session_id, response)
         return response
 
-    def _handle_message(self, session_id: str, message: dict) -> MCPResponse | None:
+    def _handle_message(
+        self, message: dict, session_id: str | None = None
+    ) -> MCPResponse | None:
         try:
             message_id = message["id"]
         except KeyError:
