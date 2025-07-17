@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/fulfilio-mcp-utils-badge.png)](https://mseep.ai/app/fulfilio-mcp-utils)
+
 # mcp-utils
 
 A Python utility package for building Model Context Protocol (MCP) servers.
